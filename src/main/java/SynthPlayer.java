@@ -1,50 +1,38 @@
 import javax.sound.midi.*;
 
 public class SynthPlayer {
-    private Synthesizer synth;
+    private Synthesizer synthesizer;
     private MidiChannel[] midiChannels;
-    private Transmitter midiInputTransmitter;
-    private Receiver midiOutputReceiver;
 
     public SynthPlayer() throws MidiUnavailableException {
-        synth = MidiSystem.getSynthesizer();
-        midiChannels = synth.getChannels();
+        synthesizer = MidiSystem.getSynthesizer();
+        synthesizer.open();
+        midiChannels = synthesizer.getChannels();
     }
 
-    public void setMidiOutputPort(int portIndex) throws MidiUnavailableException {
-        MidiDevice.Info[] midiDeviceInfo = MidiSystem.getMidiDeviceInfo();
-        if (portIndex >= 0 && portIndex < midiDeviceInfo.length) {
-            MidiDevice.Info info = midiDeviceInfo[portIndex];
-            MidiDevice device = MidiSystem.getMidiDevice(info);
-            if (device.getMaxTransmitters() != 0) {
-                midiOutputReceiver = device.getReceiver();
-            } else {
-                throw new IllegalArgumentException("Selected device does not have an output port");
-            }
+    public void setMidiDevice(MidiDevice.Info deviceInfo) throws MidiUnavailableException {
+        MidiDevice midiDevice = MidiSystem.getMidiDevice(deviceInfo);
+        if (midiDevice instanceof Synthesizer) {
+            synthesizer = (Synthesizer) midiDevice;
+            synthesizer.open();
+            midiChannels = synthesizer.getChannels();
         } else {
-            throw new IllegalArgumentException("Invalid port index");
+            throw new IllegalArgumentException("Selected device is not a Synthesizer");
         }
     }
 
-    public void start() throws MidiUnavailableException {
-        synth.open();
-        if (midiOutputReceiver != null) {
-            midiInputTransmitter = synth.getTransmitter();
-            midiInputTransmitter.setReceiver(midiOutputReceiver);
+    public void setMidiChannel(int[] channels) {
+        for (int i = 0; i < channels.length; i++) {
+            int channelIndex = i % midiChannels.length;
+            midiChannels[channelIndex].programChange(channels[i]);
         }
+    }
+
+    public void start() {
+        // Start playing the MIDI notes or sequence
     }
 
     public void stop() {
-        if (midiInputTransmitter != null) {
-            midiInputTransmitter.close();
-            midiInputTransmitter = null;
-        }
-        if (midiOutputReceiver != null) {
-            midiOutputReceiver.close();
-            midiOutputReceiver = null;
-        }
-        synth.close();
+        // Stop playing the MIDI notes or sequence
     }
-
-    // Rest of the class methods...
 }
