@@ -1,64 +1,50 @@
 import javax.sound.midi.*;
 
 public class SynthPlayer {
-    private Synthesizer synthesizer;
+    private Synthesizer synth;
     private MidiChannel[] midiChannels;
-    private MidiDevice midiOutputDevice;
+    private Transmitter midiInputTransmitter;
+    private Receiver midiOutputReceiver;
 
     public SynthPlayer() throws MidiUnavailableException {
-        synthesizer = MidiSystem.getSynthesizer();
-        synthesizer.open();
-        midiChannels = synthesizer.getChannels();
+        synth = MidiSystem.getSynthesizer();
+        midiChannels = synth.getChannels();
     }
 
-    public void setScale(int scaleChoice) {
-        // Code for setting the scale
-    }
-
-    /**
-     * Sets the MIDI channels to be used by the SynthPlayer.
-     *
-     * @param channels the MIDI channels to set
-     * @throws IllegalArgumentException if the number of channels exceeds the available channels in the synthesizer
-     */
-    public void setMidiChannels(int[] channels) {
-        if (channels.length > midiChannels.length) {
-            throw new IllegalArgumentException("Number of channels exceeds available channels");
-        }
-
-        for (int i = 0; i < channels.length; i++) {
-            midiChannels[i] = synthesizer.getChannels()[channels[i]];
+    public void setMidiOutputPort(int portIndex) throws MidiUnavailableException {
+        MidiDevice.Info[] midiDeviceInfo = MidiSystem.getMidiDeviceInfo();
+        if (portIndex >= 0 && portIndex < midiDeviceInfo.length) {
+            MidiDevice.Info info = midiDeviceInfo[portIndex];
+            MidiDevice device = MidiSystem.getMidiDevice(info);
+            if (device.getMaxTransmitters() != 0) {
+                midiOutputReceiver = device.getReceiver();
+            } else {
+                throw new IllegalArgumentException("Selected device does not have an output port");
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid port index");
         }
     }
 
-    public void setMidiOutputDevice(MidiDevice midiOutputDevice) {
-        this.midiOutputDevice = midiOutputDevice;
-        if (midiOutputDevice != null && midiOutputDevice.isOpen()) {
-            closeMidiOutputDevice();
+    public void start() throws MidiUnavailableException {
+        synth.open();
+        if (midiOutputReceiver != null) {
+            midiInputTransmitter = synth.getTransmitter();
+            midiInputTransmitter.setReceiver(midiOutputReceiver);
         }
-        try {
-            midiOutputDevice.open();
-        } catch (MidiUnavailableException e) {
-            System.out.println("Failed to open MIDI output device: " + e.getMessage());
-        }
-        if (midiOutputDevice instanceof Synthesizer) {
-            synthesizer = (Synthesizer) midiOutputDevice;
-            midiChannels = synthesizer.getChannels();
-        }
-    }
-
-
-    public void start() {
-        // Code for starting the playback
     }
 
     public void stop() {
-        // Code for stopping the playback
+        if (midiInputTransmitter != null) {
+            midiInputTransmitter.close();
+            midiInputTransmitter = null;
+        }
+        if (midiOutputReceiver != null) {
+            midiOutputReceiver.close();
+            midiOutputReceiver = null;
+        }
+        synth.close();
     }
 
-    private void closeMidiOutputDevice() {
-        if (midiOutputDevice != null && midiOutputDevice.isOpen()) {
-            midiOutputDevice.close();
-        }
-    }
+    // Rest of the class methods...
 }

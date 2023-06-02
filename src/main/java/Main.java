@@ -10,38 +10,22 @@ public class Main {
 
         System.out.println("Welcome to the Generative Synth!");
 
-        // Prompt the user for MIDI output device selection
-        MidiDevice.Info[] midiDevices = MidiSystem.getMidiDeviceInfo();
-        System.out.println("Available MIDI Output Devices:");
-        for (int i = 0; i < midiDevices.length; i++) {
-            System.out.println((i + 1) + ". " + midiDevices[i].getName());
+        // Prompt the user for MIDI device selection
+        System.out.println("Available MIDI Devices:");
+        MidiDevice.Info[] midiDeviceInfo = MidiSystem.getMidiDeviceInfo();
+        for (int i = 0; i < midiDeviceInfo.length; i++) {
+            MidiDevice.Info info = midiDeviceInfo[i];
+            System.out.println((i + 1) + ". " + info.getName());
         }
-        System.out.print("Enter the number of the MIDI Output Device: ");
+        System.out.print("Enter the MIDI device number: ");
         int deviceChoice = scanner.nextInt();
 
-        // Set the selected MIDI output device
-        MidiDevice.Info selectedDeviceInfo = midiDevices[deviceChoice - 1];
-        MidiDevice selectedDevice = MidiSystem.getMidiDevice(selectedDeviceInfo);
-        synthPlayer.setMidiOutputDevice(selectedDevice);
-
-        // Prompt the user for scale selection
-        System.out.println("Please select a scale:");
-        System.out.println("1. Chromatic");
-        System.out.println("2. Major");
-        System.out.println("3. Minor");
-        System.out.println("4. Diminished");
-        System.out.println("5. Whole-Tone");
-        System.out.print("Enter your choice: ");
-        int scaleChoice = scanner.nextInt();
-
-        // Consume the newline character
-        scanner.nextLine();
-
-        // Set the selected scale
-        synthPlayer.setScale(scaleChoice);
+        // Set the selected MIDI device
+        synthPlayer.setMidiDevice(deviceChoice - 1);
 
         // Prompt the user for MIDI channel selection
         System.out.print("Enter the MIDI channels (comma-separated): ");
+        scanner.nextLine(); // Consume the newline character
         String input = scanner.nextLine();
         String[] channelStrings = input.split(",");
         int[] midiChannels = new int[channelStrings.length];
@@ -66,7 +50,7 @@ public class Main {
         }
 
         // Set the MIDI channels
-        synthPlayer.setMidiChannels(midiChannels);
+        synthPlayer.setMidiChannel(midiChannels);
 
         // Start the playback
         synthPlayer.start();
@@ -75,6 +59,7 @@ public class Main {
 
         // Wait for user input to stop the playback
         System.out.println("Press Enter to stop the playback...");
+        scanner.nextLine();
         scanner.nextLine();
 
         // Stop the playback
