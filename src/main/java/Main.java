@@ -66,7 +66,7 @@ public class Main {
         }
 
         // Set the MIDI channels
-        synthPlayer.setMidiChannel(midiChannels);
+        synthPlayer.setMidiChannels(midiChannels);
 
         // Start the playback
         synthPlayer.start();
